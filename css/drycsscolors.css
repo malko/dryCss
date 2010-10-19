@@ -1,0 +1,56 @@
+html {
+  cursor: text;
+}
+.editbox {
+  margin: .4em;
+  padding: 0;
+  font-family: monospace;
+  font-size: 10pt;
+  color: black;
+}
+pre.code, .editbox {
+  color: #666666;
+}
+.editbox p {
+  margin: 0;
+}
+span.drycss-defined {
+  color: #830;
+}
+span.drycss-mixin {
+  color: #830;
+  font-style:italic;
+}
+span.drycss-parameters{
+  color:#000;
+  font-style:italic;
+}
+span.drycss-import {
+  color: #a00;
+}
+span.drycss-deepImport {
+  color: #a00;
+  font-weight:bold;
+}
+span.drycss-unit {
+  color: #228811;
+}
+span.drycss-value {
+  color: #770088;
+}
+span.drycss-identifier {
+  color: black;
+}
+span.drycss-important {
+  color: #0000FF;
+}
+span.drycss-colorcode {
+  color: #004499;
+}
+span.drycss-comment {
+  color: #363;
+  background:#efe;
+}
+span.drycss-string {
+  color: #AA2222;
+}

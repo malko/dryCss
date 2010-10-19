@@ -1,0 +1,24 @@
+body,div{
+	margin:0;padding:0;
+	font-size:10pt;
+}
+.CodeMirror-line-numbers{
+	background:#eee;
+	margin:0;
+	padding:.4em;
+	font-family: monospace;
+	font-size: 10pt;
+	color: black;
+}
+.CodeMirror-wrapping iframe{
+	background:#f9f9f9 !important;
+	margin:0;padding:0;
+	width:100%!important;
+}
+.tk-cssEditor{
+	background:#eee;
+	border:solid black 1px;
+	padding:0 1.7em 0 0;
+	width:98%;
+	height:98%
+}

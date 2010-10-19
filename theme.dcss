@@ -1,0 +1,154 @@
+/** theme var definitions **/
+@borderColor: #333;
+@borderSize: 1px;
+@borderStyle: solid;
+@color:#555;
+@bg:eee;
+@radius:7px;
+/* statuses */
+@warningColor:#950;
+@warningBgColor:#ffb;
+@warningBorderColor:#fb4;
+@errorColor:#922;
+@errorBgColor:#fee;
+@errorBorderColor:#b44;
+@successColor:#292;
+@successBgColor:#efe;
+@successBorderColor:#4b4;
+@infoColor:#229;
+@infoBgColor:#eef;
+@infoBorderColor:#33f;
+@disabledColor:#999;
+@disabledBgColor:#eee;
+@disabledBorderColor:#bbb;
+@prefix=tk-;
+@maketheme{
+	/** fixing some stuff across browsers */
+	.[@prefix?@prefix,]inlineStack, .[@prefix?@prefix,]icon, .[@prefix?@prefix,]icon-small, .[@prefix?@prefix,]icon-medium, .[@prefix?@prefix,]icon-big{
+		zoom:1;
+		display:-moz-inline-stack;
+		display:inline-block;
+		*display:inline;
+	}
+	.[@prefix?@prefix,]inlineStack .[@prefix?@prefix,]inlineStack, .[@prefix?@prefix,]inlineStack .[@prefix?@prefix,]icon,
+	.[@prefix?@prefix,]inlineStack .[@prefix?@prefix,]icon-small, .[@prefix?@prefix,]inlineStack .[@prefix?@prefix,]icon-medium,
+	.[@prefix?@prefix,]inlineStack .[@prefix?@prefix,]icon-big{
+		display:-moz-inline-box;
+		display:inline-block;
+		*display:inline;
+	}
+	.[@prefix?@prefix,]icon, .[@prefix?@prefix,]icon-small, .[@prefix?@prefix,]icon-medium, .[@prefix?@prefix,]icon-big{
+		overflow:hidden;color:rgba(255,255,255,0);font:0/0 Arial;
+	}
+	.[@prefix?@prefix,]icon, .[@prefix?@prefix,]icon-small{ width:16px;height:16px; }
+	.[@prefix?@prefix,]icon-medium{ width:24px;height:24px; }
+	.[@prefix?@prefix,]icon-big{ width:32px;height:32px; }
+
+
+	/** theming stuffs */
+
+	.[@prefix?@prefix,]border { border: @borderStyle @borderColor @borderSize; }
+	.[@prefix?@prefix,]border-top{ border-top: @borderStyle @borderColor @borderSize; }
+	.[@prefix?@prefix,]border-right{ border-right: @borderStyle @borderColor @borderSize; }
+	.[@prefix?@prefix,]border-bottom{ border-bottom: @borderStyle @borderColor @borderSize; }
+	.[@prefix?@prefix,]border-left{ border-left: @borderStyle @borderColor @borderSize; }
+	.[@prefix?@prefix,]border-none{ border: none; }
+
+	.[@prefix?@prefix,]corner{
+		-moz-border-radius:@radius;
+		-webkit-border-radius:@radius;
+		border-radius:@radius;
+	}
+	.[@prefix?@prefix,]corner-top{
+		-moz-border-radius-topleft:@radius;
+		-moz-border-radius-topright:@radius;
+		-webkit-border-top-left-radius:@radius;
+		-webkit-border-top-right-radius:@radius;
+		border-top-left-radius:@radius;
+		border-top-right-radius:@radius;
+	}
+	.[@prefix?@prefix,]corner-bottom{
+		-moz-border-radius-bottomleft:@radius;
+		-moz-border-radius-bottomright:@radius;
+		-webkit-border-bottom-left-radius:@radius;
+		-webkit-border-bottom-right-radius:@radius;
+		border-bottom-left-radius:@radius;
+		border-bottom-right-radius:@radius;
+	}
+	.[@prefix?@prefix,]corner-left{
+		-moz-border-radius-topleft:@radius;
+		-moz-border-radius-bottomleft:@radius;
+		-webkit-border-top-left-radius:@radius;
+		-webkit-border-bottom-left-radius:@radius;
+		border-top-left-radius:@radius;
+		border-bottom-left-radius:@radius;
+	}
+	.[@prefix?@prefix,]corner-right{
+		-moz-border-radius-topright:@radius;
+		-moz-border-radius-bottomright:@radius;
+		-webkit-border-top-right-radius:@radius;
+		-webkit-border-bottom-right-radius:@radius;
+		border-top-right-radius:@radius;
+		border-bottom-right-radius:@radius;
+	}
+	.[@prefix?@prefix,]corner-top-left{
+		-moz-border-radius-topleft:@radius;
+		-webkit-border-top-left-radius:@radius;
+		border-top-left-radius:@radius;
+	}
+	.[@prefix?@prefix,]corner-top-right{
+		-moz-border-radius-topright:@radius;
+		-webkit-border-top-right-radius:@radius;
+		border-top-right-radius:@radius;
+	}
+	.[@prefix?@prefix,]corner-bottom-left{
+		-moz-border-radius-bottomleft:@radius;
+		-webkit-border-bottom-left-radius:@radius;
+		border-bottom-left-radius:@radius;
+	}
+	.[@prefix?@prefix,]corner-bottom-right{
+		-moz-border-radius-bottomright:@radius;
+		-webkit-border-bottom-right-radius:@radius;
+		border-bottom-right-radius:@radius;
+	}
+
+	.[@prefix?@prefix,]content{
+		padding:.4em .8em;
+		display:block;
+	}
+
+	/** some status classes */
+	.[@prefix?@prefix,]state-warning, .[@prefix?@prefix,]state-error, .[@prefix?@prefix,]state-success, .[@prefix?@prefix,]state-info{
+		font-weight:bold;
+	}
+	.[@prefix?@prefix,]state-normal{
+		background:@color;
+		border-color:@borderColor !important;
+		color:@bg;
+	}
+	.[@prefix?@prefix,]state-warning {
+		background:@warningBgColor;
+		border-color:@warningBorderColor;
+		color:@warningColor;
+	}
+	.[@prefix?@prefix,]state-error{
+		background:@errorBgColor;
+		border-color:@errorBorderColor;
+		color:@errorColor;
+	}
+	.[@prefix?@prefix,]state-success{
+		background:@successBgColor;
+		border-color:@successBorderColor;
+		color:@successColor;
+	}
+	.[@prefix?@prefix,]state-info{
+		background:@infoBgColor;
+		border-color:@infoBorderColor;
+		color:@infoColor;
+	}
+	.[@prefix?@prefix,]state-disabled{
+		background:@disabledBgColor !important;
+		border-color:@disabledBorderColor !important;
+		color:@disabledColor !important;
+	}
+}

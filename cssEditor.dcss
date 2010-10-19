@@ -1,0 +1,226 @@
+/** debugging / general purpose **/
+@redbox: "border:solid red 1px !important;";
+@bluebox: "border:solid blue 1px !important;";
+@greenbox: "border:solid green 1px !important;";
+
+/** theme var definitions **/
+@borderColor: #333;
+@borderSize: 1px;
+@borderStyle: solid;
+@radius:.5em;
+@shadowTop:.1em;
+@shadowLeft:.1em;
+@shadowFuzz:.25em;
+@darkShadowColor:#000;
+@shadowColor:#888;
+@lightShadowColor:#fff;
+@outlineSize:1px;
+@outlineFuzz:0.05em;
+@outlineColor:@shadowColor;
+
+/* statuses */
+@statePadding:.4em .8em;
+@warningColor:#950;
+@warningBgColor:#ffb;
+@warningBorderColor:#fb4;
+@errorColor:#922;
+@errorBgColor:#fee;
+@errorBorderColor:#b44;
+@successColor:#292;
+@successBgColor:#efe;
+@successBorderColor:#4b4;
+@infoColor:#229;
+@infoBgColor:#eef;
+@infoBorderColor:#33f;
+@=c(color=,background=,backgroundTarget=){
+	[@color?color:@color;,]
+	[@background?background[@backgroundTarget?-@backgroundTarget,]:@background;,]
+}
+@=opacity(o=80){
+	opacity:.@o;
+  -moz-opacity:.@o;
+  -webkit-opacity:.@o;
+  filter:Alpha(Opacity=@o);
+}
+@=boxShadow(shadowTop=@shadowTop,shadowLeft=@shadowLeft,shadowFuzz=@shadowFuzz,shadowColor=@shadowColor){
+	-moz-box-shadow: @shadowTop @shadowLeft @shadowFuzz @shadowColor;
+	-webkit-box-shadow: @shadowTop @shadowLeft @shadowFuzz @shadowColor;
+	box-shadow: @shadowTop @shadowLeft @shadowFuzz @shadowColor;
+	//filter:progid:DXImageTransform.Microsoft.DropShadow(Color=@shadowColor, OffX=@shadowLeft, OffY=shadowTop, Positive=1)
+}
+@=boxNeon(shadowTop=@shadowTop,shadowLeft=@shadowLeft,shadowFuzz=@shadowFuzz,shadowColor=@shadowColor){
+	-moz-box-shadow: @shadowTop @shadowLeft @shadowFuzz @shadowColor, -@shadowTop -@shadowLeft @shadowFuzz @shadowColor;
+	-webkit-box-shadow: @shadowTop @shadowLeft @shadowFuzz @shadowColor, -@shadowTop -@shadowLeft @shadowFuzz @shadowColor;
+	box-shadow: @shadowTop @shadowLeft @shadowFuzz @shadowColor, -@shadowTop -@shadowLeft @shadowFuzz @shadowColor;
+}
+@=textShadow(shadowTop=@shadowTop,shadowLeft=@shadowLeft,shadowFuzz=@shadowFuzz,shadowColor=@shadowColor){
+	text-shadow: @shadowTop @shadowLeft @shadowFuzz @shadowColor;
+}
+
+@=transition(what=all,time=0.25s,transition=ease-out,delay=){
+  -moz-transition: @what @time @transition [@delay? @delay,];  /* FF3.7+ */
+  -o-transition: @what @time @transition [@delay? @delay,];   /* Opera 10.5 */
+  -webkit-transition: @what @time @transition [@delay? @delay,];/* Saf3.2+, Chrome */
+  transition: @what @time @transition [@delay? @delay,];
+}
+
+/** took from */
+@=bgGradient(start=@shadowColor,end=@lightShadowColor){
+  background-image: -moz-linear-gradient(top, @start, @end); /* FF3.6 */
+  background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, @start),color-stop(1, @end));
+            filter:  progid:DXImageTransform.Microsoft.gradient(startColorStr='@start', EndColorStr='@end');
+}
+
+@inlineStack{
+  zoom:1;
+  display:-moz-inline-stack;
+  display:inline-block;
+  *display:inline;
+  vertical-align:top;
+}
+@inlineBox{
+  zoom:1;
+  display:-moz-inline-box;
+  -moz-box-orient: vertical;
+  display:inline-block;
+  *display:inline;
+  vertical-align:top;
+}
+@fixList{
+	zoom:1;
+	margin:0;
+	padding:0;
+	list-style-type:none;
+	list-style-image:none;
+	li{
+		@:@fixList;
+	}
+}
+
+/** theming stuffs */
+
+@border { border: @borderStyle @borderColor @borderSize; }
+@borderTop{ border-top: @borderStyle @borderColor @borderSize; }
+@borderRight{ border-right: @borderStyle @borderColor @borderSize; }
+@borderBottom{ border-bottom: @borderStyle @borderColor @borderSize; }
+@borderLeft{ border-left: @borderStyle @borderColor @borderSize; }
+@borderNone{ border: none; }
+
+
+@boxShadow{
+	@=boxShadow(@shadowTop,@shadowLeft,@shadowFuzz,@shadowColor);
+}
+@boxDarkShadow{
+	@=boxShadow(@shadowTop,@shadowLeft,@shadowFuzz,@darkShadowColor);
+}
+@boxLightShadow{
+	@=boxShadow(@shadowTop,@shadowLeft,@shadowFuzz,@lightShadowColor);
+}
+@boxNeon{
+	@=boxNeon();
+}
+@boxDarkNeon{
+	@=boxNeon(@shadowTop,@shadowLeft,@shadowFuzz,@darkShadowColor);
+}
+@boxLightNeon{
+	@=boxNeon(@shadowTop,@shadowLeft,@shadowFuzz,@lightShadowColor);
+}
+@boxOutline{
+	-moz-box-shadow:
+		0 @outlineSize @outlineFuzz @outlineColor,
+		0 -@outlineSize @outlineFuzz @outlineColor,
+		@outlineSize 0 @outlineFuzz @outlineColor,
+		-@outlineSize 0 @outlineFuzz @outlineColor,
+		@outlineSize @outlineSize @outlineFuzz @outlineColor,
+		-@outlineSize @outlineSize  @outlineFuzz @outlineColor,
+		@outlineSize -@outlineSize @outlineFuzz @outlineColor,
+		-@outlineSize -@outlineSize  @outlineFuzz @outlineColor;
+	-webkit-box-shadow:
+		0 @outlineSize @outlineFuzz @outlineColor,
+		0 -@outlineSize @outlineFuzz @outlineColor,
+		@outlineSize 0 @outlineFuzz @outlineColor,
+		-@outlineSize 0 @outlineFuzz @outlineColor,
+		@outlineSize @outlineSize @outlineFuzz @outlineColor,
+		-@outlineSize @outlineSize  @outlineFuzz @outlineColor,
+		@outlineSize -@outlineSize @outlineFuzz @outlineColor,
+		-@outlineSize -@outlineSize  @outlineFuzz @outlineColor;
+	box-shadow:
+		0 @outlineSize @outlineFuzz @outlineColor,
+		0 -@outlineSize @outlineFuzz @outlineColor,
+		@outlineSize 0 @outlineFuzz @outlineColor,
+		-@outlineSize 0 @outlineFuzz @outlineColor,
+		@outlineSize @outlineSize @outlineFuzz @outlineColor,
+		-@outlineSize @outlineSize  @outlineFuzz @outlineColor,
+		@outlineSize -@outlineSize @outlineFuzz @outlineColor,
+		-@outlineSize -@outlineSize  @outlineFuzz @outlineColor;
+}
+@textShadow{
+	@=textShadow();
+}
+@textDarkShadow{
+	text-shadow: @shadowTop @shadowLeft @shadowFuzz @darkShadowColor;
+}
+@textLightShadow{
+	text-shadow: @shadowTop @shadowLeft @shadowFuzz @lightShadowColor;
+}
+@textNeon{
+	text-shadow: @shadowTop @shadowLeft @shadowFuzz @shadowColor,  -@shadowTop -@shadowLeft @shadowFuzz @shadowColor;
+}
+@textOutline{
+	text-shadow:
+		0 @outlineSize @outlineFuzz @outlineColor,
+		0 -@outlineSize @outlineFuzz @outlineColor,
+		@outlineSize 0 @outlineFuzz @outlineColor,
+		-@outlineSize 0 @outlineFuzz @outlineColor,
+		@outlineSize @outlineSize @outlineFuzz @outlineColor,
+		-@outlineSize @outlineSize  @outlineFuzz @outlineColor,
+		@outlineSize -@outlineSize @outlineFuzz @outlineColor,
+		-@outlineSize -@outlineSize  @outlineFuzz @outlineColor;
+}
+
+@=cornerRadius(radius=@radius,cornerV=,cornerH=){
+  -moz-border-radius[@cornerV||@cornerH?-,]@cornerV@cornerH:@radius;
+  -webkit-border[@cornerV?-@cornerV,][@cornerH?-@cornerH,]-radius:@radius;
+  border[@cornerV?-@cornerV,][@cornerH?-@cornerH,]-radius:@radius;
+}
+@corner{
+	@=cornerRadius(@radius);
+}
+@cornerTopLeft{ @=cornerRadius(,top,left); }
+@cornerTopRight{ @=cornerRadius(,top,right); }
+@cornerBottomLeft{ @=cornerRadius(,bottom,left); }
+@cornerBottomRight{ @=cornerRadius(,bottom,right); }
+@cornerTop{ @:@cornerTopLeft; @:@cornerTopRight; }
+@cornerBottom{ @:@cornerBottomLeft; @:@cornerBottomRight; }
+@cornerLeft{ @:@cornerTopLeft; @:@cornerBottomLeft; }
+@cornerRight{ @:@cornerTopRight; @:@cornerBottomRight; }
+
+/** some status classes */
+@state{
+	padding:@statePadding;
+	font-weight:bold;
+}
+@stateWarning {
+	@:@state;
+  background:@warningBgColor;
+  border-color:@warningBorderColor;
+  color:@warningColor;
+}
+@stateError{
+	@:@state;
+	background:@errorBgColor;
+	border-color:@errorBorderColor;
+	color:@errorColor;
+}
+@stateSuccess{
+	@:@state;
+	background:@successBgColor;
+	border-color:@successBorderColor;
+	color:@successColor;
+}
+@stateInfo{
+	@:@state;
+	background:@infoBgColor;
+	border-color:@infoBorderColor;
+	color:@infoColor;
+}
