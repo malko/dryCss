@@ -1,4 +1,10 @@
 
+/*
+jquery toolkit plugin to transform a div in a dryCss editor.
+please understand that the code is made quick and dirty not properly,
+this is far more a first attempt than a proper and final version.
+/!\ Important /!\ require codeMirrorPath to be defined before loading
+*/
 (function($){
 	if(! String.prototype.trim){
 		String.prototype.trim = function(){
@@ -7,7 +13,7 @@
 	}
 	$.toolkit('tk.cssEditor',{
 		_storableOptions:{
-			urlElementLevel:'content|compactOutput'
+			urlElementLevel:'content|compactOutput|connectorUrl'
 		},
 
 		_init:function(){
@@ -35,7 +41,7 @@
 				['defined',function(){self.toggleDefinedList();}]
 			],l=bts.length,i,bt;
 			for( i=0;i<l;i++){
-				$('<button type="button">'+(bts[i][0])+'</button>').click(bts[i][1]).appendTo(self._toolbar);
+				$('<button type="button" class="tk-border toolbarItem">'+(bts[i][0])+'</button>').click(bts[i][1]).appendTo(self._toolbar);
 			}
 			$('<label><input type="checkbox" value="1"'+(self.options.compactOutput?' checked="checked"':'')+' style="vertical-align:middle;"/>Compact</label>').appendTo(self._toolbar)
 			.find('input').change(function(){self.set('compactOutput',$(this).is(':checked')?true:false);});
@@ -171,6 +177,9 @@
 			this.editor.focus();
 		},
 		loadRawContent: function(){
+			if( this.options.connectorUrl === null){
+				return false;
+			}
 			var self = this,
 				datas = {
 					id:        self.elmt.attr('id'),
@@ -180,6 +189,9 @@
 			jQuery.post(document.location.href,datas,self._loadRawContentResponse,'text');
 		},
 		saveRawContent: function(){
+			if( this.options.connectorUrl === null){
+				return false;
+			}
 			this._saveContent();
 			var self = this,
 				datas = {
@@ -190,6 +202,9 @@
 			jQuery.post(document.location.href,datas,self._saveRawContentResponse,'text');
 		},
 		saveComputedContent: function(){
+			if( this.options.connectorUrl === null){
+				return false;
+			}
 			this._saveContent();
 			var self = this,
 				datas = {
@@ -257,17 +272,18 @@
 		}
 	});
 	$.tk.cssEditor.defaults={
-		editorApi: 'codeMirror',
-		editorCss:{
-			width:'100%',
-			minHeight:'350px',
-			height:'95%'
-		},
-		content:null,
-		compactOutput:false,
-		rawFilePath:'../../',
-		compFilePath:'../../',
-		initCallback:function(){
+		editorApi: 'codeMirror'
+		,editorCss:{
+			width:'100%'
+			,minHeight:'350px'
+			,height:'95%'
+		}
+		,connectorUrl:null
+		,content:null
+		,compactOutput:false
+		,rawFilePath:'../../'
+		,compFilePath:'../../'
+		,initCallback:function(){
 			var cssEditor = this
 				, editor = cssEditor.editor
 				, contentDoc

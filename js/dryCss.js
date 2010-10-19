@@ -1,6 +1,7 @@
 /**
 DryCss parser
 * @changelog
+*            - 2010-06-30 - now eval maths ops multiple operation in a single eval and manage recursion correctly and support many other units
 *            - 2010-06-03 - real/deep file imports are not parsed anymore before inclusion
 *            - 2010-05-21 - bug correction regarding chrome support of quoted vars
 *            - 2010-05-05 - empty parameters must be pass as empty double quote like defining empty vars (so make it uniform)
@@ -14,6 +15,7 @@ DryCss parser
 *            - 2010-03-31 - make deep rule import work from includes
 *            - 2010-03-30 - add getDefined method.
 * @todo manage options passing for imports
+* @todo manage @media to not be unested
 */
 dryCss = function(str,options){
 	var self = this,
@@ -138,56 +140,25 @@ dryCss.prototype = {
 			],
 			//-- replace [] evaluations
 			'eval':[
-				/\[(([^[\]]+|\[[^[\]]+\])+?)]/g,
-				function(m,script){
-					//- dbg('eval',m);
-					if( script.indexOf('[') >-1 && script.indexOf(']') > -1)
-						script = script.replace(replaceCbs.eval[0],replaceCbs.eval[1]);
-					//- dbg(script);
-					//math operations
-					script = script.replace(/\s*(\.?\d+|\d+\.\d+|#[a-f0-9]{6}|#[a-f0-9]{3})\s*(em|px|%)?\s*([+*\/-])\s*(\.?\d+|\d+\.\d+|#[a-f0-9]{6}|#[a-f0-9]{3})\s*(em|px|%)?\s*/i,function(m,a,aUnit,operator,b,bUnit){
-						var aIsHex = a.substr(0,1)==='#'?true:false,
-							bIsHex = b.substr(0,1)==='#'?true:false,
-							unit='',res=0;
-						a = aIsHex?color2rgb(a):parseFloat(a);
-						b = bIsHex?color2rgb(b):parseFloat(b);
-						//- dbg('isHex',a,b,aIsHex,bIsHex,typeof a,typeof b,m)
-						if( aIsHex || bIsHex){
-							return rgbMath(a,b,operator);
-						}
-						if(aUnit && bUnit ){
-							aUnit = aUnit.toLowerCase();
-							bUnit = bUnit.toLowerCase();
-							if( aUnit === bUnit){
-								unit = aUnit;
-							}else{
-								if( aUnit === '%'){
-									a = a/100;
-									unit = bUnit;
-								}else if( bUnit === '%'){
-									b = b/100;
-									unit = aUnit;
-								}else{
-									unit=aUnit;
-								}
-								//- if(aUnit==='em' && bUnit==='px'){
-									//- a=16*a;
-								//- }else if(aUnit==='px' && bUnit==='em'){
-									//- b=16*b;
-								//- }
-							}
-						}else if( aUnit || bUnit ){
-							unit = (aUnit?aUnit:bUnit).toLowerCase();
-						}
-						switch(operator){
-							case '*': res = Math.round(a*b*100)/100; break;
-							case '-': res = a-b; break;
-							case '+': res = a+b; break;
-							case '/': res = Math.round(a/b*100)/100; break;
-						}
-						return unit==='px'?Math.round(res)+'px':res+unit;
-					});
-					// ternary conditional operator replacements
+				['[',']'],
+				function(script){
+					script = applyCallback(script.substr(1,script.length-2),'eval'); // apply eval recursively
+					//-- math operations
+					var operandExp = "\\s*(\\d+\\.\\d+|\\.?\\d+|#[a-f0-9]{3}(?:[a-f0-9]{3})?)\\s*(e[xm]|p[ctx]|%|in|deg|[mc]m)?\\s*"
+					, operatorExp  = "([+*\\/-])"
+					, operation1Exp = new RegExp(operandExp+"([*\\/])"+operandExp,'i')
+					, operation2Exp = new RegExp(operandExp+"([-+])"+operandExp,'i')
+					;
+					// make primary ops (*/)
+					while(operation1Exp.exec(script)){
+						script = script.replace(operation1Exp,function(m,a,aUnit,operator,b,bUnit){ return doOp(a,aUnit,operator,b,bUnit); });
+					}
+					// make secondary ops (+-)
+					while(operation2Exp.exec(script)){
+						script = script.replace(operation2Exp,function(m,a,aUnit,operator,b,bUnit){ return doOp(a,aUnit,operator,b,bUnit); });
+					}
+
+					//-- ternary conditional operator replacements
 					script = script.replace(/^\s*([^?]*?)\s*\?\s*([^,]*?)\s*,\s*(.*?)\s*$/,function(m,a,b,c){
 						if( a.match(/&&|\|\||[><=]{1,3}|!==?/) ){
 							a=new Function('return "'+a.replace(/\s*(&&|\|\||[><=]{1,3}|!==?)\s*/,'"$1"')+'";')();
@@ -237,16 +208,103 @@ dryCss.prototype = {
 			}
 			return rgb2color(res);
 		},
+		doOp = function(a,aUnit,operator,b,bUnit){
+			var aIsHex = a.substr(0,1)==='#'?true:false,
+				bIsHex = b.substr(0,1)==='#'?true:false,
+				unit='',res=0;
+			a = aIsHex?color2rgb(a):parseFloat(a);
+			b = bIsHex?color2rgb(b):parseFloat(b);
+			if( aIsHex || bIsHex){
+				return rgbMath(a,b,operator);
+			}
+			if(aUnit && bUnit ){
+				aUnit = aUnit.toLowerCase();
+				bUnit = bUnit.toLowerCase();
+				if( aUnit === bUnit){
+					unit = aUnit;
+				}else{
+					if( aUnit === '%'){
+						a = a/100;
+						unit = bUnit;
+					}else if( bUnit === '%'){
+						b = b/100;
+						unit = aUnit;
+					}else{
+						unit=aUnit;
+					}
+				}
+			}else if( aUnit || bUnit ){
+				unit = (aUnit?aUnit:bUnit).toLowerCase();
+			}
+			switch(operator){
+				case '*': res = Math.round(a*b*100)/100; break;
+				case '-': res = a-b; break;
+				case '+': res = a+b; break;
+				case '/': res = Math.round(a/b*100)/100; break;
+			}
+			return unit==='px'?Math.round(res)+'px':res+unit;
+		},
+		/**
+		* match outer nested constructs
+		*/
+		matchTokens = function(str,startToken,endToken){
+			var cleanToken = /([(){}[\].*+?^$-])/g
+				, exp=new RegExp(startToken.replace(cleanToken,"\\$1")+"|"+endToken.replace(cleanToken,"\\$1"),'g')
+				, depth=0
+				, startIndex=0
+				, matches=[]
+				, lastIndex = 0
+				, match
+				;
+			var i = 0;
+			while( match = exp.exec(str)){
+				if(match[0] === startToken){
+					if( depth===0){
+						startIndex=exp.lastIndex;
+					}
+					depth++;
+				}else{
+					depth--;
+					if( depth<0){
+						depth=0;
+						break;// one match only
+					}else if(depth===0){
+						matches.push(str.substr(startIndex,match.index-startIndex));
+					}
+				}
+			}
+			return matches.length?matches:null;
+		},
+		/**
+		* match outer nested constructs and replace them
+		*/
+		tokenReplace = function(string,startToken,endToken,replacement){
+			var matches = matchTokens(string,startToken,endToken);
+			if(! matches){
+				return string;
+			}
+			for(var i=0,l=matches.length;i<l;i++){
+				string = string.replace(startToken+matches[i]+endToken,replacement)
+			}
+			return string;
+		},
+		applyCallback = function(str,cbName){
+			if(replaceCbs[cbName][0] instanceof Array){ // first index is an array containing start/end tokens for replacement
+				return tokenReplace(str,replaceCbs[cbName][0][0],replaceCbs[cbName][0][1],replaceCbs[cbName][1])
+			}else{ // assume first index is a RegExp
+				return str.replace(replaceCbs[cbName][0],replaceCbs[cbName][1]);
+			}
+		}
 		applyCallbacks = function(str){
 			if( str.indexOf('@')<0  ){
 				if( str.indexOf('[')>-1 ){
-					str = str.replace(replaceCbs.eval[0],replaceCbs.eval[1]);
+					str = applyCallback(str,'eval');
 				}
 				//- return str.replace(replaceCbs.clean[0],replaceCbs.clean[1]);
-				str = str.replace(replaceCbs.clean[0],replaceCbs.clean[1]);
+				str = applyCallback(str,'clean');
 			}
-			for(cb in replaceCbs ){
-				str = str.replace(replaceCbs[cb][0],replaceCbs[cb][1]);
+			for(var cb in replaceCbs ){
+				str = applyCallback(str,cb);
 			}
 			return str.match(/^\s*;+\s*$/)?'':str;
 		};
@@ -256,7 +314,9 @@ dryCss.prototype = {
 		str = self.imports.length?self.imports.join('\n')+'\n':'';
 		for(parseKey in self._rulesOrder){
 			if( parseKey.match(/^\s*@/)){
-				continue;
+				if( ! parseKey.match(/^\s*@(?:media|page|font-face)\b/i)){
+					continue;
+				}
 			}
 			r = self.lookupRule(parseKey);
 			if(false===r){
@@ -437,6 +497,9 @@ dryCss.prototype = {
 		}
 		// then read doc vars
 		str = str.replace(/\s*(@[a-z_][a-z0-9_]*)\s*:\s*(?:([^;"']*)|("([^"]+|\\")*"|'([^']+|\\')'));(\s*;)?/ig,function(m,k,v1,v2){
+			if( k.match(/@(media|page|font-face)/i) ){
+				return m;
+			}
 		if( v1 !== '' && v1 !== undefined){
 				self.vars[k]=v1;
 			}else if( v2 !== '' && v2 !== undefined){

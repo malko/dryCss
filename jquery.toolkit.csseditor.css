@@ -22,3 +22,9 @@ body,div{
 	width:98%;
 	height:98%
 }
+.toolbarItem{
+	background:#fefefe;
+}
+.toolbarItem:hover{
+	background:#ffb;
+}
