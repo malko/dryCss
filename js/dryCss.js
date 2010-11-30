@@ -597,6 +597,7 @@ dryCss.defaults={
 		var res ="";
 		jQuery.ajax({
 			async:false,
+			cache: false,
 			global:false,
 			dataType:'text',
 			url:url,
