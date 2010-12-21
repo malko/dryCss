@@ -14,7 +14,7 @@ when nested:
 	!extend parent selector
 */
 
-$codeMirrorPath = '../CodeMirror-0.8';
+$codeMirrorPath = '../CodeMirror-0.91';
 
 	#- set editor id (will be also used as part as the storage key)
 	if( ! empty($_GET['editorId']) ){
@@ -100,6 +100,210 @@ $codeMirrorPath = '../CodeMirror-0.8';
 			return this.replace(/^\s*|\s*$/,'');
 		}
 	}
+
+	var completionList = [
+		/** props name */
+		'accelerator','azimuth','background','background-attachment','background-color','background-image','background-position','background-position-x',
+		'background-position-y','background-repeat','behavior','border','border-bottom','border-bottom-color','border-bottom-style','border-bottom-width',
+		'border-collapse','border-color','border-left',	'border-left-color','border-left-style','border-left-width','border-right','border-right-color',
+		'border-right-style','border-right-width','border-spacing','border-style','border-top','border-top-color','border-top-style','border-top-width',
+		'border-width','bottom','caption-side','clear','clip','color','content','counter-increment','counter-reset','cue','cue-after','cue-before','cursor',
+		'direction','display','elevation','empty-cells','filter','float','font','font-family','font-size','font-size-adjust','font-stretch','font-style',
+		'font-variant','font-weight','height','ime-mode','include-source','layer-background-color','layer-background-image','layout-flow','layout-grid',
+		'layout-grid-char','layout-grid-char-spacing','layout-grid-line','layout-grid-mode','layout-grid-type','left','letter-spacing','line-break',
+		'line-height','list-style','list-style-image','list-style-position','list-style-type','margin','margin-bottom','margin-left','margin-right',
+		'margin-top','marker-offset','marks','max-height','max-width','min-height','min-width','-moz-binding','-moz-border-radius',
+		'-moz-border-radius-topleft','-moz-border-radius-topright','-moz-border-radius-bottomright','-moz-border-radius-bottomleft','-moz-border-top-colors',
+		'-moz-border-right-colors','-moz-border-bottom-colors','-moz-border-left-colors','-moz-opacity','-moz-outline','-moz-outline-color','-moz-outline-style',
+		'-moz-outline-width','-moz-user-focus','-moz-user-input','-moz-user-modify','-moz-user-select','orphans','outline','outline-color','outline-style',
+		'outline-width','overflow','overflow-X','overflow-Y','padding','padding-bottom','padding-left','padding-right','padding-top','page','page-break-after',
+		'page-break-before','page-break-inside','pause','pause-after','pause-before','pitch','pitch-range','play-during','position','quotes','-replace','richness',
+		'right','ruby-align','ruby-overhang','ruby-position','-set-link-source','size','speak','speak-header','speak-numeral','speak-punctuation',
+		'speech-rate','stress','scrollbar-arrow-color','scrollbar-base-color','scrollbar-dark-shadow-color','scrollbar-face-color','scrollbar-highlight-color',
+		'scrollbar-shadow-color','scrollbar-3d-light-color','scrollbar-track-color','table-layout','text-align','text-align-last','text-decoration',
+		'text-indent','text-justify','text-overflow','text-shadow','text-transform','text-autospace','text-kashida-space','text-underline-position','top',
+		'unicode-bidi','-use-link-source','vertical-align','visibility','voice-family','volume','white-space','widows','width','word-break','word-spacing',
+		'word-wrap','writing-mode','z-index','zoom',
+		/** values */
+		'normal','italic','small-caps','bold','xx-large','x-large','large','medium','small','x-small','xx-small','larger','smaller','transparent','none',
+		'repeat','repeat-x','repeat-y','no-repeat','scroll','fixed','center'/*'top','bottom','left','right'*/,'underline','overline','line-through','sub','super',
+		'capitalize','uppercase','lowercase','justify','auto','thin','medium','thick','solid','double','groove','ridge','inset','outset','both','block','inline',
+		'list-item','disk','circle','square','decimal','lower-roman','upper-roman','lower-alpha','upper-alpha','inside','outside','visible','hidden','absolute',
+		'relative','static','fixed','crosshair','default','hand','move','e-resize','ne-resize','nw-resize','n-resize','se-resize','sw-resize','s-resize','w-resize',
+		'text','wait','help','important'
+	];
+
+	var completionManager =  {
+		minLength:2,
+		maxItem:10,
+		visible:false,
+		lastWord:'',
+		selectedClass:'tk-state-warning tk-state-border',
+		expressionChars:'[a-zA-Z0-9_@=-]',
+		completionList:[],
+		_editorRestoreGrabKey: null,
+		setCompItems:function(list){
+			this.completionList = list;
+		},
+		addCompItem:function(item){
+			for( var i=0,l=this.completionList.length;i<l;i++){
+				if( this.completionList[i] === item)
+					return false;
+			}
+			this.completionList.push(item);
+			return true;
+		},
+		_getList:function(word,context,previous){
+			if( word.length < this.minLength)
+				return [];
+			var autoComp=[],wl=word.length,self=this;
+			for( var i=0,l=self.completionList.length;i<l && autoComp.length<this.maxItem;i++){
+				if( word === self.completionList[i].substr(0,wl) && wl < self.completionList[i].length ){
+					autoComp.push(self.completionList[i]);
+				}
+			}
+			return autoComp;
+		},
+		_displayList:function(editor,compList){
+			if( compList.length < 1 ){
+				this._hideList(editor);
+			}
+			var self = this
+				, listElmt = $('#completionManagerList')
+				, coords = editor.cursorCoords()
+				, selectedItem = listElmt.find('li.selected').text()
+				/*, selectedText = selectedItem.length?selectedItem.text():''
+				, selectedClass = listElmt.find('li.selected').attr('class');*/
+			;
+			if(! listElmt.length){
+				listElmt = $('<ul id="completionManagerList" class="tk-border" style="list-style-type:none;display:block;position:absolute;background:#fff;color:#000;margin:0;padding:.4em;"></ul>').appendTo('body').hide();
+				listElmt.click(function(e){ self.itemSelected(e,editor);});
+			}
+			listElmt.css({top:coords.y,left:coords.x});
+			listElmt.find('li').remove();
+			for(var i=0,l=compList.length,item;i<l;i++){
+				item = $('<li'+(compList[i] === selectedItem?' class="selected '+self.selectedClass+'"':"")+'>'+compList[i]+'</li>').appendTo(listElmt);
+				/*if( compList[i] === selectedText)
+					item.attr('class',selectedClass);*/
+			}
+			if(! self.visible){
+				listElmt.show();
+				self.visible = true;
+				if( editor.frozen ){
+					self._editorRestoreGrabKey = {frozen:editor.frozen ,keyFilter:editor.keyFilter};
+				}
+				editor.grabKeys(function(){return false;},function(k){
+					switch(k){
+						case 27:
+						case 9:
+						case 38:
+						case 40:
+						case 13:
+							return true;
+					}
+					return false;
+				});
+				$(editor.frame.contentDocument?editor.frame.contentDocument:editor.contentWindow.document).bind('keydown.completionmngr',function(e){ self.keydown(e,editor);});
+			}
+		},
+		_hideList:function(editor){
+			this.visible = false;
+			$('#completionManagerList').hide();
+			$(editor.frame.contentDocument?editor.frame.contentDocument:editor.contentWindow.document).unbind('.completionmngr');
+			if( this._editorRestoreGrabKey  !== null){
+				editor.grabKeys(this._editorRestoreGrabKey.frozen,this._editorRestoreGrabKey.keyFilter)
+			}else{
+				editor.ungrabKeys();
+			}
+		},
+		itemSelected:function(e,editor){
+			this._hideList(editor);
+			var cursorPos = editor.cursorPosition()
+			, lineText = editor.lineContent(cursorPos.line)
+			, textBefore = lineText.substr(0,cursorPos.character).replace(new RegExp('^.*?('+this.expressionChars+'*)$'),'$1')
+			, selected = $('#completionManagerList li.selected').text()
+			;
+			if( e.type==='click'){
+				selected = $(e.target).text();
+			}else if( selected==='' ){
+				selected = $('#completionManagerList li:first').text();
+			}
+			// editor.insertIntoLine(cursorPos.line,cursorPos.character,selected.substr(textBefore.length));
+			editor.replaceSelection(selected.substr(textBefore.length));
+		},
+		keydown:function(e,editor){
+			//dbg('keydown',e.which)
+			var self = this;
+			switch(e.which){
+				case 27: // escape
+					setTimeout(function(){self._hideList(editor);},50);
+					break;
+				case 9: // tab
+				case 13: //return
+					e.preventDefault();
+					e.stopImmediatePropagation();
+					this.itemSelected(e,editor);
+					return false;
+					break;
+				case 38: // up
+					e.preventDefault();
+					var item = $('#completionManagerList li.selected');
+					if(! item.length){
+						item = $('#completionManagerList li:last');
+						item.addClass('selected '+self.selectedClass);
+					}else{
+						item.removeClass('selected '+self.selectedClass);
+						if( item.prev('li').length ){
+							item.prev('li').addClass('selected '+self.selectedClass);
+						}else{
+							$('#completionManagerList li:last').addClass('selected '+self.selectedClass);
+						}
+					}
+					break;
+				case 40: // down
+					e.preventDefault();
+					var item = $('#completionManagerList li.selected');
+					if(! item.length){
+						item = $('#completionManagerList li');
+						item = item.filter(':eq('+(item.length>1?1:0)+')');
+						item.addClass('selected tk-state-warning');
+					}else{
+						item.removeClass('selected tk-state-warning');
+						if( item.next('li').length ){
+							item.next('li').addClass('selected tk-state-warning');
+						}else{
+							$('#completionManagerList li:first').addClass('selected tk-state-warning');
+						}
+					}
+					break;
+				/*case 38: // left
+				case 39: // right*/
+			}
+		},
+		check:function(editor,elmt){
+			var self = completionManager
+				, cursorPos = editor.cursorPosition()
+				, lineText = editor.lineContent(cursorPos.line)
+				, textBefore = lineText.substr(0,cursorPos.character).replace(new RegExp('^.*?('+self.expressionChars+'*)$'),'$1')
+				, nextChar = lineText.substr(cursorPos.character,1)
+				;
+			if( self.lastWord === textBefore ){
+				return;
+			}else{
+				self.lastWord = textBefore;
+			}
+			if( nextChar.match(new RegExp(self.expressionChars)) ){
+				return self._hideList(editor);
+			}
+			var compList = self._getList(textBefore,$(elmt).attr('class'),lineText.substr(0,cursorPos.character-textBefore.length));
+			if( compList.length < 1)
+				return self._hideList(editor);
+			return self._displayList(editor,compList);
+		}
+	};
+
+
+
 	$.toolkit('tk.cssEditor',{
 		_storableOptions:{
 			urlElementLevel:'content|compactOutput'
@@ -126,6 +330,7 @@ $codeMirrorPath = '../CodeMirror-0.8';
 				['save raw',function(){self.saveRawContent();}],
 				['save computed',function(){self.saveComputedContent();}],
 				['export',function(){self.computeStyle('export');}],
+				['save as',function(){self.computeStyle('saveas');}],
 				['render',function(){self.computeStyle('inject');}],
 				['defined',function(){self.toggleDefinedList();}]
 			],l=bts.length,i,bt;
@@ -225,21 +430,39 @@ $codeMirrorPath = '../CodeMirror-0.8';
 		computeStyle: function(action){
 			if( typeof(action)!=='string')
 				action = 'inject';
-			var self = this,
-				c = this._saveContent();
-			out = new dryCss(c,{compact:self.options.compactOutput,baseImportUrl:self.options.rawFilePath}).toString();
-
+			var self = this
+				, c = this._saveContent()
+				, i
+			;
+			out = new dryCss(c,{compact:self.options.compactOutput,baseImportUrl:self.options.rawFilePath});
+			// populate completion
+			completionManager.setCompItems(completionList);
+			defined = out.getDefined();
+			for(i=0,l=defined.vars.length;i<l;i++){
+				completionManager.addCompItem(defined.vars[i]);
+			}
+			for(i=0,l=defined.rules.length;i<l;i++){
+				completionManager.addCompItem(defined.rules[i]);
+			}
+			for(i=0,l=defined.funcs.length;i<l;i++){
+				completionManager.addCompItem(defined.funcs[i].replace(/\(.*/,''));
+			}
+			out = out.toString();
 			//self._parseRawString(c,self.options.compactOutput,self.options.rawFilePath);
 			switch(action){
 				case 'export':
 					var w = window.open('','cssEditorComputedStyleExport','toolbar=no,statusbar=no,scrollbars=yes');
 					$('body',w.document).find('pre').remove().end().html('<pre>'+out+'</pre>');
 					break;
+				case 'saveas':
+					window.open('data:text/dss,'+escape(out),'cssEditorComputedStyleExport','toolbar=no,statusbar=no,scrollbars=yes');
+					window.save();
+					break;
 				case 'inject':
 					// check for a computed style element in parent if none create it
 					if( window.opener){
 						var parentHead = $('head',window.opener.document),
-							s = $('style#cssEditorComputedStyle',parentHead),
+							s = $('style[id=cssEditorComputedStyle]',parentHead), // must use [id=] expression to work under my chrome version
 							l = $('link[href$='+self.elmt.attr('id')+'.css]',parentHead);
 						cssPath = window.location.href.replace(/[^\/]*$/,'')+self.options.compFilePath;
 						out = out.replace(/url\((\.\/|)?(?!http:\/\/)/g,'url('+cssPath+(cssPath.substr(-1)==='/'?'':'/'));
@@ -252,6 +475,7 @@ $codeMirrorPath = '../CodeMirror-0.8';
 						}else{ // ie version
 							s = window.opener.document.createElement('STYLE');
 							s.setAttribute('type','text/css');
+							s.id = "cssEditorComputedStyle";
 							s.styleSheet.cssText = out;
 							s =$(s);
 						}
@@ -310,7 +534,13 @@ $codeMirrorPath = '../CodeMirror-0.8';
 				case 4: // <- this is for chrome
 					var s = ed.selection();
 					if( s.length ){
-						ed.replaceSelection(s+''+s);
+						if(! s.match(/[\r\n]/)){ //-- single line selection
+							ed.replaceSelection(s+''+s);
+						}else{ //-- multiline selection
+							ed.selectLines(ed.cursorPosition().line,0,ed.cursorPosition(false).line,ed.lineContent(ed.cursorPosition(false).line).length);
+							s = ed.selection();
+							ed.replaceSelection(s+'\n'+s);
+						}
 					}else{
 						var l = ed.nthLine(ed.currentLine());
 						s = ed.lineContent(l);
@@ -325,7 +555,7 @@ $codeMirrorPath = '../CodeMirror-0.8';
 					letsgo = false;
 					break;
 				case 12: // l+ctrl under chrome
-				case 103: //g
+				case 103:// g
 				case 71:
 					var l = prompt('Go to line:');
 					if( l ){
@@ -434,10 +664,14 @@ $codeMirrorPath = '../CodeMirror-0.8';
 					},
 					initCallback:function(){
 						tkWidget._applyOpts('content');
-						$(tkWidget.editor.win.document).keypress(function(e){tkWidget.shortCutKey(e)});
+						$(tkWidget.editor.win.document).keydown(function(e){tkWidget.shortCutKey(e)});
 						tkWidget.editor.focus();
+					},
+					cursorActivity:function(elmt){
+						completionManager.check(tkWidget.editor,elmt);
 					}
 				});
+				completionManager.setCompItems(completionList);
 			},
 			getContent: function(){
 				return this.getCode();
