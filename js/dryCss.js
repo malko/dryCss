@@ -1,6 +1,11 @@
 /**
 DryCss parser
 * @changelog
+*            - 2011-03-11 - now merge ie filters in a single filter rule
+*            - 2011-03-09 - remove empty rules from nocompact mode output
+*            - 2011-03-02 - now @varname will default to lookup for a varname mixin if not found a var with that name.
+*            - 2011-03-01 - allow "!" as parent rule reference without being followed by other stuff
+*            - 2011-02-10 - allow some more complex variables by applying them callbacks if required;
 *            - 2010-06-30 - now eval maths ops multiple operation in a single eval and manage recursion correctly and support many other units
 *            - 2010-06-03 - real/deep file imports are not parsed anymore before inclusion
 *            - 2010-05-21 - bug correction regarding chrome support of quoted vars
@@ -132,7 +137,11 @@ dryCss.prototype = {
 				/@[a-z_][a-z0-9_]*/ig,
 				function(m){
 					if( typeof self.vars[m] !== 'undefined'){
-						return self.vars[m];
+						return self.vars[m].match(/@(?!media\b|page\b|font-face\b)[a-z0-9_]/i)?applyCallbacks(self.vars[m]).trim():self.vars[m];
+					}else{ //- try to find a mixin with that label.
+						var mixin=self.lookupRule(m,true);
+						if( mixin !== false)
+							return applyCallbacks(mixin).trim();
 					}
 					self.options.logError('undefined var '+m);
 					return m;
@@ -169,6 +178,17 @@ dryCss.prototype = {
 					return script;//.replace(replaceCbs.eval[0],replaceCbs.eval[1]);
 				}
 			],
+			//-- merge rules if more than once is present (ie filters only for now)
+			'merging':function(str){
+				if(! str.match(/filter\s*:/i) )
+					return str;
+				var filters=[];
+				str = str.replace(/(-ms-)?filter\s*:([^;]+);/g,function(m,ms,filter){
+					filters.push(filter);
+					return '';
+				});
+				return str+'filter:'+filters.join(', ')+';';
+			},
 			//-- make correct indentation
 			'clean':[
 				/(^|[{;])\s*/g,
@@ -289,7 +309,9 @@ dryCss.prototype = {
 			return string;
 		},
 		applyCallback = function(str,cbName){
-			if(replaceCbs[cbName][0] instanceof Array){ // first index is an array containing start/end tokens for replacement
+			if( replaceCbs[cbName] instanceof Function){
+				return replaceCbs[cbName](str);
+			}else if(replaceCbs[cbName][0] instanceof Array){ // first index is an array containing start/end tokens for replacement
 				return tokenReplace(str,replaceCbs[cbName][0][0],replaceCbs[cbName][0][1],replaceCbs[cbName][1])
 			}else{ // assume first index is a RegExp
 				return str.replace(replaceCbs[cbName][0],replaceCbs[cbName][1]);
@@ -324,7 +346,7 @@ dryCss.prototype = {
 				continue;
 			}
 			r = applyCallbacks(r);
-			if( r ==='' || r === undefined){
+			if( r.match(/^\s*$/) || r === undefined){
 				continue;
 			}
 			if( parseKey.length ){
@@ -387,7 +409,7 @@ dryCss.prototype = {
 		}
 		return defined;
 	},
-	lookupRule: function(name){
+	lookupRule: function(name,quicSearchOnly){
 		var self = this;
 		name=name.replace(/\s+/,' ');
 		//first look-up for rules in the current instance
@@ -400,8 +422,10 @@ dryCss.prototype = {
 				return self.imported[i].rules[name];
 			}
 		}
+		if( quicSearchOnly )
+			return false;
 		//-- here we haven't found any rules with that names fall back to a more complete search
-		var ruleExp = new RegExp('(^|,)\s*'+name+'\s*(,|$)');
+		var ruleExp = new RegExp('(^|,)\\s*'+name+'\\s*(,|$)');
 		for(var rule in self.rules){
 			if( rule.match(ruleExp) )
 				return self.rules[rule];
@@ -438,7 +462,7 @@ dryCss.prototype = {
 		//-- create prefix ( recurse the parent key stack)
 		var prefix = stackKey.length? this._fullKey(stackKey[stackKey.length-1],stackKey.slice(0,-1)) : '';
 		//-- check if the key must be glued to it's parent
-		key = key.replace(/^([:!])?([\s\S]+)$/,function(m,v1,v2){ if(v1){ return v1===':'?m:v2; } return (prefix.length?' ':'')+m;})
+		key = key.replace(/^([:!])?([\s\S]*)$/,function(m,v1,v2){ if(v1){ return v1===':'?m:v2; } return (prefix.length?' ':'')+m;})
 			.replace(/\s+/g,' ');
 		if(! prefix.length)
 			return key;
