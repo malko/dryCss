@@ -58,33 +58,33 @@
 }
 
 @=transition(what=all,time=0.25s,transition=ease-out,delay=){
-  -moz-transition: @what @time @transition [@delay? @delay,];  /* FF3.7+ */
-  -o-transition: @what @time @transition [@delay? @delay,];   /* Opera 10.5 */
-  -webkit-transition: @what @time @transition [@delay? @delay,];/* Saf3.2+, Chrome */
-  transition: @what @time @transition [@delay? @delay,];
+	-moz-transition: @what @time @transition [@delay? @delay,];  /* FF3.7+ */
+	-o-transition: @what @time @transition [@delay? @delay,];   /* Opera 10.5 */
+	-webkit-transition: @what @time @transition [@delay? @delay,];/* Saf3.2+, Chrome */
+	transition: @what @time @transition [@delay? @delay,];
 }
 
 /** took from */
 @=bgGradient(start=@shadowColor,end=@lightShadowColor){
-  background-image: -moz-linear-gradient(top, @start, @end); /* FF3.6 */
-  background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, @start),color-stop(1, @end));
-            filter:  progid:DXImageTransform.Microsoft.gradient(startColorStr='@start', EndColorStr='@end');
+	background: -moz-linear-gradient(top, @start, @end); /* FF3.6 */
+	background: -webkit-gradient(linear,left top,left bottom,color-stop(0, @start),color-stop(1, @end));
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorStr=[@start+#000000], EndColorStr=[@end+#000000]);
 }
 
 @inlineStack{
-  zoom:1;
-  display:-moz-inline-stack;
-  display:inline-block;
-  *display:inline;
-  vertical-align:top;
+	zoom:1;
+	display:-moz-inline-stack;
+	display:inline-block;
+	*display:inline;
+	vertical-align:top;
 }
 @inlineBox{
-  zoom:1;
-  display:-moz-inline-box;
-  -moz-box-orient: vertical;
-  display:inline-block;
-  *display:inline;
-  vertical-align:top;
+	zoom:1;
+	display:-moz-inline-box;
+	-moz-box-orient: vertical;
+	display:inline-block;
+	*display:inline;
+	vertical-align:top;
 }
 @fixList{
 	zoom:1;

@@ -1,6 +1,8 @@
 /**
 DryCss parser
 * @changelog
+*            - 2011-03-17 - add support for negative values in Maths expression
+*                         - now funcs may return full rules (functions are now the only way to include sryCss markup in rule names)
 *            - 2011-03-11 - now merge ie filters in a single filter rule
 *            - 2011-03-09 - remove empty rules from nocompact mode output
 *            - 2011-03-02 - now @varname will default to lookup for a varname mixin if not found a var with that name.
@@ -116,7 +118,7 @@ dryCss.prototype = {
 						self.options.logError('Can\'t resolve call to unknown mixin '+func);
 						return m;
 					}
-					var str = self.funcs[func].code;
+					var str = self.funcs[func].code,ruleParts;
 					params = params.split(/\s*,\s*/);
 					for(var i=0,l=self.funcs[func].params.length; i<l; i++){
 						if( typeof params[i] === 'undefined' || params[i].match(/^\s*$/) ){
@@ -128,6 +130,15 @@ dryCss.prototype = {
 					for( i=0; i<l;i++){
 						str=str.replace(new RegExp('@'+self.funcs[func].params[i][0]+'(?=[^a-zA-Z0-9_])','g'),params[i]);
 					}
+
+					//-- modif to allow better parsing of rules returned by funcs to be tested before approval
+					ruleParts = str.match(/\s*([^{]+){([\s\S]*)}\s*$/);
+					if( ruleParts ){
+						var partKey = applyCallbacks(self._fullKey(ruleParts[1],[self.trim(parseKey)]));
+						delayed[partKey] = (delayed[partKey]?delayed[partKey]:'')+applyCallbacks(ruleParts[2]);
+						return '';
+					}
+					//-- end modif to approve
 					//- str = new dryCss(str,self.options).toString();
 					return applyCallbacks(str);
 				}
@@ -153,7 +164,7 @@ dryCss.prototype = {
 				function(script){
 					script = applyCallback(script.substr(1,script.length-2),'eval'); // apply eval recursively
 					//-- math operations
-					var operandExp = "\\s*(\\d+\\.\\d+|\\.?\\d+|#[a-f0-9]{3}(?:[a-f0-9]{3})?)\\s*(e[xm]|p[ctx]|%|in|deg|[mc]m)?\\s*"
+					var operandExp = "\\s*([-+]?\\d+\\.\\d+|[-+]?\\.?\\d+|#[a-f0-9]{3}(?:[a-f0-9]{3})?)\\s*(e[xm]|p[ctx]|%|in|deg|[mc]m)?\\s*"
 					, operatorExp  = "([+*\\/-])"
 					, operation1Exp = new RegExp(operandExp+"([*\\/])"+operandExp,'i')
 					, operation2Exp = new RegExp(operandExp+"([-+])"+operandExp,'i')
@@ -172,7 +183,7 @@ dryCss.prototype = {
 						if( a.match(/&&|\|\||[><=]{1,3}|!==?/) ){
 							a=new Function('return "'+a.replace(/\s*(&&|\|\||[><=]{1,3}|!==?)\s*/,'"$1"')+'";')();
 						}
-						//- dbg('ternary operator',m,a);
+						//- dbg('ternary operator',parseKey,script,m,a);
 						return a?(b?b:a):c;
 					});
 					return script;//.replace(replaceCbs.eval[0],replaceCbs.eval[1]);
@@ -346,7 +357,7 @@ dryCss.prototype = {
 				continue;
 			}
 			r = applyCallbacks(r);
-			if( r.match(/^\s*$/) || r === undefined){
+			if( r.match(/^[\s;]*$/) || r === undefined){
 				continue;
 			}
 			if( parseKey.length ){
