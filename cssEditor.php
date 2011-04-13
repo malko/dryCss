@@ -463,7 +463,7 @@ $codeMirrorPath = '../CodeMirror-0.91';
 					if( window.opener){
 						var parentHead = $('head',window.opener.document),
 							s = $('style[id=cssEditorComputedStyle]',parentHead), // must use [id=] expression to work under my chrome version
-							l = $('link[href$='+self.elmt.attr('id')+'.css]',parentHead);
+							l = $('link[href$="'+self.elmt.attr('id')+'.css"]',parentHead);
 						cssPath = window.location.href.replace(/[^\/]*$/,'')+self.options.compFilePath;
 						out = out.replace(/url\((\.\/|)?(?!http:\/\/)/g,'url('+cssPath+(cssPath.substr(-1)==='/'?'':'/'));
 						if( l.length)
