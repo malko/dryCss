@@ -1,8 +1,10 @@
 /**
 DryCss parser
 * @changelog
+*            - 2011-05-01 - rewrite support for complex rules inside functions
+*                         - now drycCss instanciation allow a dryCss instance as options
 *            - 2011-03-17 - add support for negative values in Maths expression
-*                         - now funcs may return full rules (functions are now the only way to include sryCss markup in rule names)
+*                         - now funcs may return full rules (functions are now the only way to include dryCss markup in rule names)
 *            - 2011-03-11 - now merge ie filters in a single filter rule
 *            - 2011-03-09 - remove empty rules from nocompact mode output
 *            - 2011-03-02 - now @varname will default to lookup for a varname mixin if not found a var with that name.
@@ -40,12 +42,16 @@ dryCss = function(str,options){
 	//read options
 	if( typeof(options) === 'undefined'){
 		self.options = dryCss.defaults;
+	}else if(options instanceof dryCss){
+		self.imported = options.imported;
+		self.funcs = options.funcs;
+		self.vars = options.vars;
+		self.options = options.options;
 	}else{
 		for(k in dryCss.defaults){
 			self.options[k] = typeof(options[k])!=='undefined'?options[k]:dryCss.defaults[k];
 		}
 	}
-
 	self.compute();
 }
 
@@ -91,15 +97,13 @@ dryCss.prototype = {
 					}
 					if(m.substr(1,1)==='!'){ //- repace @:@mixin
 						var id
-							, _id
 							, pEscaped = p.replace('.','\\.')
 							, pEscapedG=new RegExp(pEscaped,'g')
 							, idExp = new RegExp('^'+pEscaped+'(?![a-zA-Z0-9_])(.+)$')
 							;
 						for( id in fullRulesOrder){
 							if( id.match(idExp)){
-								_id = id.replace(pEscapedG,parseKey);
-								delayed[_id] = (delayed[_id] ?delayed[_id]:'')+applyCallbacks(self.lookupRule(id));
+								delay(id.replace(pEscapedG,parseKey),self.lookupRule(id));
 							}
 						}
 					}
@@ -130,16 +134,6 @@ dryCss.prototype = {
 					for( i=0; i<l;i++){
 						str=str.replace(new RegExp('@'+self.funcs[func].params[i][0]+'(?=[^a-zA-Z0-9_])','g'),params[i]);
 					}
-
-					//-- modif to allow better parsing of rules returned by funcs to be tested before approval
-					ruleParts = str.match(/\s*([^{]+){([\s\S]*)}\s*$/);
-					if( ruleParts ){
-						var partKey = applyCallbacks(self._fullKey(ruleParts[1],[self.trim(parseKey)]));
-						delayed[partKey] = (delayed[partKey]?delayed[partKey]:'')+applyCallbacks(ruleParts[2]);
-						return '';
-					}
-					//-- end modif to approve
-					//- str = new dryCss(str,self.options).toString();
 					return applyCallbacks(str);
 				}
 			],
@@ -183,7 +177,7 @@ dryCss.prototype = {
 						if( a.match(/&&|\|\||[><=]{1,3}|!==?/) ){
 							a=new Function('return "'+a.replace(/\s*(&&|\|\||[><=]{1,3}|!==?)\s*/,'"$1"')+'";')();
 						}
-						//- dbg('ternary operator',parseKey,script,m,a);
+						//-- dbg('ternary operator',parseKey,script,m,a);
 						return a?(b?b:a):c;
 					});
 					return script;//.replace(replaceCbs.eval[0],replaceCbs.eval[1]);
@@ -207,7 +201,7 @@ dryCss.prototype = {
 			]
 		},
 		delayed={},
-		cb,r,i,
+		cb,r,i,parseKey,
 		fullRulesOrder=self._getFullRulesOrder(),
 		color2rgb=function(c){
 			if(c.substr(0,1))
@@ -327,7 +321,7 @@ dryCss.prototype = {
 			}else{ // assume first index is a RegExp
 				return str.replace(replaceCbs[cbName][0],replaceCbs[cbName][1]);
 			}
-		}
+		};
 		applyCallbacks = function(str){
 			if( str.indexOf('@')<0  ){
 				if( str.indexOf('[')>-1 ){
@@ -340,6 +334,9 @@ dryCss.prototype = {
 				str = applyCallback(str,cb);
 			}
 			return str.match(/^\s*;+\s*$/)?'':str;
+		};
+		delay = function(key,rule){
+			delayed[key] = (delayed[key]?delayed[key]:'')+applyCallbacks(rule);
 		};
 
 
@@ -360,11 +357,14 @@ dryCss.prototype = {
 			if( r.match(/^[\s;]*$/) || r === undefined){
 				continue;
 			}
-			if( parseKey.length ){
+			if(r.match('{')){ // fully reparse nested constructs
+				str +=new dryCss(parseKey+'{'+r+'}',self).toString()+'\n';
+			}else if( parseKey.length ){
 				str += parseKey+(self.options.compact?'{':'{\n\t')+r+(self.options.compact?'}\n':'\n}\n');
 			}else{
 				str += r+'\n';
 			}
+			// apply delayed mixins imports
 			for(i in delayed){
 				if( delayed[i] === '' || delayed[i] === undefined){
 					continue;
@@ -501,7 +501,8 @@ dryCss.prototype = {
 					return self._cleanStr(importContent);
 				}else{
 					self.imported.push(new dryCss(importContent));//,self.options);
-					self.imports.push(m);
+					//self.imports.push(m);
+					self.imports.push('@import url("'+uri+'");');
 					return '';
 				}/*
 				importContentDry = new dryCss(importContent);//,self.options);
