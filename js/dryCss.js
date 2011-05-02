@@ -3,6 +3,7 @@ DryCss parser
 * @changelog
 *            - 2011-05-01 - rewrite support for complex rules inside functions
 *                         - now drycCss instanciation allow a dryCss instance as options
+*                         - add @charset rule support ( @charset:charset; )
 *            - 2011-03-17 - add support for negative values in Maths expression
 *                         - now funcs may return full rules (functions are now the only way to include dryCss markup in rule names)
 *            - 2011-03-11 - now merge ie filters in a single filter rule
@@ -342,6 +343,11 @@ dryCss.prototype = {
 
 		//-- no that we have correctly un-nested all that mess we can execute the rules
 		str = self.imports.length?self.imports.join('\n')+'\n':'';
+		
+		//import @charset rule
+		if( self.vars['@charset'] ){
+			str += '@charset "'+self.vars['@charset']+'";\n';
+		}
 		for(parseKey in self._rulesOrder){
 			if( parseKey.match(/^\s*@/)){
 				if( ! parseKey.match(/^\s*@(?:media|page|font-face)\b/i)){
