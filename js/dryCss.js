@@ -1,9 +1,12 @@
 /**
 DryCss parser
 * @changelog
+*            - 2011-05-03 - bug correction regarding function with no parameters
+*                         - import dryCss passed as option in the new instance
 *            - 2011-05-01 - rewrite support for complex rules inside functions
 *                         - now drycCss instanciation allow a dryCss instance as options
 *                         - add @charset rule support ( @charset:charset; )
+*            - 2011-04-26 - add dryer to convert existing cssString to dryCss nested rules
 *            - 2011-03-17 - add support for negative values in Maths expression
 *                         - now funcs may return full rules (functions are now the only way to include dryCss markup in rule names)
 *            - 2011-03-11 - now merge ie filters in a single filter rule
@@ -45,8 +48,7 @@ dryCss = function(str,options){
 		self.options = dryCss.defaults;
 	}else if(options instanceof dryCss){
 		self.imported = options.imported;
-		self.funcs = options.funcs;
-		self.vars = options.vars;
+		self.imported.push(options);
 		self.options = options.options;
 	}else{
 		for(k in dryCss.defaults){
@@ -117,14 +119,15 @@ dryCss.prototype = {
 			  }
 			],
 			funcs:[ //function call replacement
-				/@=([a-z0-9_]+)\((([^\(\)]*|\([^\)]+\))+)\)/ig,
+				/@=([a-z0-9_]+)\((([^\(\)]*|\([^\)]+\))*)\)/ig,
 				function(m,func,params){
 					if( typeof self.funcs[func] === 'undefined'){
 						self.options.logError('Can\'t resolve call to unknown mixin '+func);
 						return m;
 					}
 					var str = self.funcs[func].code,ruleParts;
-					params = params.split(/\s*,\s*/);
+
+					params = self.trim(params).split(/\s*,\s*/);
 					for(var i=0,l=self.funcs[func].params.length; i<l; i++){
 						if( typeof params[i] === 'undefined' || params[i].match(/^\s*$/) ){
 							params[i] = self.funcs[func].params[i][1];
@@ -625,6 +628,31 @@ dryCss.prototype = {
 		return this.computedCSS;
 	}
 }
+dryCss.autoload = function(){
+	if( typeof jQuery !== 'function')
+		return false;
+	$('link[type="text/dss"]').each(function(){
+		var e=$(this),n = '',out = new dryCss(dryCss.defaults.syncXHR(e.attr('href'))).toString(),head=document.getElementsByTagName("head")[0];
+		if( e.attr('id') ){
+			n=e.attr('id');
+		}else{
+			n=e.attr('href').replace(/^.*?([^\/]+)\.dc?ss$/,'$1');
+		}
+		s = document.getElementById('cssEditor4-'.n);
+		if(s){
+			head.removeChild(s);
+		}
+		s = document.createElement('STYLE');
+		s.setAttribute('type','text/css');
+		s.id = "cssEditor4-"+n;
+		head.appendChild(s);
+		if( s.styleSheet ){
+			s.styleSheet.cssText = out;
+		}else{
+			s.appendChild(document.createTextNode(out));
+		}
+	});
+}
 dryCss.defaults={
 	baseImportUrl:'./',
 	compact:false,
@@ -657,3 +685,75 @@ dryCss.defaults={
 		return res;
 	}
 }
+
+/** DRYER **/
+function dryer(cssString){
+	if(! this instanceof dryer){
+		return new dryer(css);
+	}
+	this.css = cssString;
+	this.dry = '';
+	this._rules={};
+	this.transform();
+}
+dryer.prototype = {
+	parseUntil: function(token,consume){
+		if( ! this._parsing.length ){
+			return null;
+		}
+		var c = null;
+		this._parsing = this._parsing.replace(new RegExp("^\\s*([\\s\\S]*?)"+token.replace(/([\[\]{}.*^$])/g,'\\$1')+"\\s+"),function(m,ret){
+			c = ret;
+			return consume?'':token;
+		});
+		return c;
+	}
+	,appendRule:function(key,rule){
+		var self=this,k;
+		for(var i=0,l=key.length; i<l; i++){
+			k = key.slice(0,i+1).join('"]["');
+			new Function('self','if( typeof(self._rules["'+k+'"])==="undefined"){ self._rules["'+k+'"] = {__rule__:""};}')(self);
+		}
+		new Function("self,rule",'self._rules["'+key.join('"]["')+'"].__rule__+=rule')(self,rule);
+	}
+	,nestRule:function(rule,indentLevel){
+		var self = this
+			, _rule  = rule.__rule__.replace(/^\s*|\s*$/g,'')
+			, nest = []
+			, indentLevel1=indentLevel+'\t'
+		;
+		for(var i in rule){
+			if( i ==='__rule__' || ! rule[i].__rule__)
+				continue;
+			nest.push(indentLevel1+i+'{'+self.nestRule(rule[i],indentLevel1)+'}');
+		}
+		return (_rule.length?'\n'+indentLevel1+_rule.replace(/\r?\n\s*/mg,'\n'+indentLevel1):'')
+			+(nest.length?'\n'+nest.join('\n'+indentLevel1,nest):'')
+			+'\n'+indentLevel;
+	}
+	,transform:function(){
+		// remove comments
+		var self = this;
+		self._parsing = self.css.replace(/\/\*[\s\S]+?\*\//g,'');
+		// parse all rules and explode them
+		var c = null,i=null,l=null;
+
+		while(c=self.parseUntil('{',true)){
+			rule = self.parseUntil('}',true);
+			if( c.indexOf(',')>0 ){
+				continue;
+			}
+			c = c.replace(/^\s+|\s+$/g,'').split(',');
+			for( i=0,l=c.length;i<l;i++){
+				key = c[i].split(/\s+/);
+				self.appendRule(key,rule);
+			}
+		}
+		// now recompose dss
+		var out=[],i;
+		for( i in self._rules){
+			out.push(i+'{'+self.nestRule(self._rules[i],'')+'}');
+		}
+		document.getElementById('dry').innerHTML=out.join('\n');
+	}
+};

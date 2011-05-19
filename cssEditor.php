@@ -13,6 +13,9 @@ when nested:
 	:pseudoClass
 	!extend parent selector
 */
+date_default_timezone_set('Europe/Paris');
+ini_set('default_charset','utf-8');
+mb_internal_encoding('UTF-8');
 
 $codeMirrorPath = '../CodeMirror-0.91';
 
@@ -139,7 +142,7 @@ $codeMirrorPath = '../CodeMirror-0.91';
 		visible:false,
 		lastWord:'',
 		selectedClass:'tk-state-warning tk-state-border',
-		expressionChars:'[a-zA-Z0-9_@=-]',
+		expressionChars:'[a-zA-Z0-9_@#=\.-]',
 		completionList:[],
 		_editorRestoreGrabKey: null,
 		setCompItems:function(list){
@@ -154,7 +157,7 @@ $codeMirrorPath = '../CodeMirror-0.91';
 			return true;
 		},
 		_getList:function(word,context,previous){
-			if( word.length < this.minLength)
+			if( word.length < this.minLength )
 				return [];
 			var autoComp=[],wl=word.length,self=this;
 			for( var i=0,l=self.completionList.length;i<l && autoComp.length<this.maxItem;i++){
@@ -296,11 +299,43 @@ $codeMirrorPath = '../CodeMirror-0.91';
 				return self._hideList(editor);
 			}
 			var compList = self._getList(textBefore,$(elmt).attr('class'),lineText.substr(0,cursorPos.character-textBefore.length));
-			if( compList.length < 1)
+			if( compList.length < 1){
 				return self._hideList(editor);
+			}
 			return self._displayList(editor,compList);
 		}
-	};
+	}
+	,refreshDryCompletion=function(dryCss){
+		completionManager.setCompItems(completionList);
+		if( dryCss){
+			defined = dryCss.getDefined();
+			for(i=0,l=defined.vars.length;i<l;i++){
+				completionManager.addCompItem(defined.vars[i]);
+			}
+			for(i=0,l=defined.rules.length;i<l;i++){
+				completionManager.addCompItem(defined.rules[i]);
+			}
+			for(i=0,l=defined.funcs.length;i<l;i++){
+				completionManager.addCompItem(defined.funcs[i].replace(/\(.*/,''));
+			}
+		}
+		if( window.opener && window.opener.document){
+			$('*',window.opener.document).each(function(){
+				var e = $(this),id=e.attr('id'),cname=e.attr('class').split(/\s+/);
+				if( id ){
+					completionManager.addCompItem('#'+id);
+				}
+				if( cname.length ){
+					for(var i=0,l=cname.length;i<l;i++){
+						if( cname[i].length){
+							completionManager.addCompItem('.'+cname[i]);
+						}
+					}
+				}
+			});
+		}
+	}
+	;
 
 
 
@@ -436,17 +471,7 @@ $codeMirrorPath = '../CodeMirror-0.91';
 			;
 			out = new dryCss(c,{compact:self.options.compactOutput,baseImportUrl:self.options.rawFilePath});
 			// populate completion
-			completionManager.setCompItems(completionList);
-			defined = out.getDefined();
-			for(i=0,l=defined.vars.length;i<l;i++){
-				completionManager.addCompItem(defined.vars[i]);
-			}
-			for(i=0,l=defined.rules.length;i<l;i++){
-				completionManager.addCompItem(defined.rules[i]);
-			}
-			for(i=0,l=defined.funcs.length;i<l;i++){
-				completionManager.addCompItem(defined.funcs[i].replace(/\(.*/,''));
-			}
+			refreshDryCompletion(out);
 			out = out.toString();
 			//self._parseRawString(c,self.options.compactOutput,self.options.rawFilePath);
 			switch(action){
@@ -671,7 +696,7 @@ $codeMirrorPath = '../CodeMirror-0.91';
 						completionManager.check(tkWidget.editor,elmt);
 					}
 				});
-				completionManager.setCompItems(completionList);
+				refreshDryCompletion();
 			},
 			getContent: function(){
 				return this.getCode();
