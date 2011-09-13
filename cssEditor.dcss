@@ -37,9 +37,9 @@
 	[@background?background[@backgroundTarget?-@backgroundTarget,]:@background;,]
 }
 @=opacity(o=80){
-	opacity:.@o;
-  -moz-opacity:.@o;
-  -webkit-opacity:.@o;
+	opacity:[@o/100];
+  -moz-opacity:[@o/100];
+  -webkit-opacity:[@o/100];
   filter:Alpha(Opacity=@o);
 }
 @=boxShadow(shadowTop=@shadowTop,shadowLeft=@shadowLeft,shadowFuzz=@shadowFuzz,shadowColor=@shadowColor){
@@ -61,16 +61,22 @@
 	-moz-transition: @what @time @transition [@delay? @delay,];  /* FF3.7+ */
 	-o-transition: @what @time @transition [@delay? @delay,];   /* Opera 10.5 */
 	-webkit-transition: @what @time @transition [@delay? @delay,];/* Saf3.2+, Chrome */
+	-ms-transition: @what @time @transition [@delay? @delay,];  /* IE10? */
 	transition: @what @time @transition [@delay? @delay,];
 }
 
 /** took from */
-@=bgGradient(start=@shadowColor,end=@lightShadowColor){
-	background: -moz-linear-gradient(top, @start, @end); /* FF3.6 */
-	background: -webkit-gradient(linear,left top,left bottom,color-stop(0, @start),color-stop(1, @end));
-	filter: progid:DXImageTransform.Microsoft.gradient(startColorStr=[@start+#000000], EndColorStr=[@end+#000000]);
-}
 
+@=bgGradient(start=@shadowColor,end=@lightShadowColor,hor=0){
+  background-color:@start;
+  background: -o-linear-gradient([@hor!=0?left,top],@start,@end);
+  background:-webkit-gradient(linear,left top,[@hor!=0?right top,left bottom],from(@start),to(@end));
+  background: -webkit-linear-gradient([@hor!=0?left,top],@start,@end);
+  background: -moz-linear-gradient([@hor!=0?left,top],@start,@end);
+  background: -ms-linear-gradient([@hor!=0?left,top],@start,@end);
+  background-image:linear-gradient([@hor!=0?left,top],@start,@end);
+  filter: progid:DXImageTransform.Microsoft.Gradient(StartColorStr='@start', EndColorStr='@end', GradientType=[@hor!=0?1,0]);
+}
 @inlineStack{
 	zoom:1;
 	display:-moz-inline-stack;
@@ -179,9 +185,14 @@
 }
 
 @=cornerRadius(radius=@radius,cornerV=,cornerH=){
-  -moz-border-radius[@cornerV||@cornerH?-,]@cornerV@cornerH:@radius;
-  -webkit-border[@cornerV?-@cornerV,][@cornerH?-@cornerH,]-radius:@radius;
-  border[@cornerV?-@cornerV,][@cornerH?-@cornerH,]-radius:@radius;
+	-moz-border-radius[@cornerV||@cornerH?-,]@cornerV@cornerH:@radius;
+	-webkit-border[@cornerV?-@cornerV,][@cornerH?-@cornerH,]-radius:@radius;
+	        border[@cornerV?-@cornerV,][@cornerH?-@cornerH,]-radius:@radius;
+}
+@=bgClip(clip=padding){
+	-moz-background-clip: @clip;
+	-webkit-background-clip: [@clip]-box;
+	        background-clip: [@clip]-box;
 }
 @corner{
 	@=cornerRadius(@radius);
