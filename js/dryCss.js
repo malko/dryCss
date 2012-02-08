@@ -1,6 +1,7 @@
 /**
 DryCss parser
 * @changelog
+*            - 2011-06-09 - bug correction in dryer when no blank char at the end of a rule + better output indentation
 *            - 2011-05-03 - bug correction regarding function with no parameters
 *                         - import dryCss passed as option in the new instance
 *            - 2011-05-01 - rewrite support for complex rules inside functions
@@ -702,7 +703,7 @@ dryer.prototype = {
 			return null;
 		}
 		var c = null;
-		this._parsing = this._parsing.replace(new RegExp("^\\s*([\\s\\S]*?)"+token.replace(/([\[\]{}.*^$])/g,'\\$1')+"\\s+"),function(m,ret){
+		this._parsing = this._parsing.replace(new RegExp("^\\s*([\\s\\S]*?)"+token.replace(/([\[\]{}.*^$])/g,'\\$1')+"\\s*"),function(m,ret){
 			c = ret;
 			return consume?'':token;
 		});
@@ -728,13 +729,13 @@ dryer.prototype = {
 			nest.push(indentLevel1+i+'{'+self.nestRule(rule[i],indentLevel1)+'}');
 		}
 		return (_rule.length?'\n'+indentLevel1+_rule.replace(/\r?\n\s*/mg,'\n'+indentLevel1):'')
-			+(nest.length?'\n'+nest.join('\n'+indentLevel1,nest):'')
+			+(nest.length?'\n'+nest.join('\n'+indentLevel,nest):'')
 			+'\n'+indentLevel;
 	}
 	,transform:function(){
 		// remove comments
 		var self = this;
-		self._parsing = self.css.replace(/\/\*[\s\S]+?\*\//g,'');
+		self._parsing = self.css.replace(/\/\*[\s\S]+?\*\//g,'').replace(/;\s*([^\n])/g,';\n$1');
 		// parse all rules and explode them
 		var c = null,i=null,l=null;
 
@@ -754,6 +755,6 @@ dryer.prototype = {
 		for( i in self._rules){
 			out.push(i+'{'+self.nestRule(self._rules[i],'')+'}');
 		}
-		document.getElementById('dry').innerHTML=out.join('\n');
+		return out.join('\n');
 	}
 };

@@ -38,9 +38,9 @@
 }
 @=opacity(o=80){
 	opacity:[@o/100];
-  -moz-opacity:[@o/100];
-  -webkit-opacity:[@o/100];
-  filter:Alpha(Opacity=@o);
+	-moz-opacity:[@o/100];
+	-webkit-opacity:[@o/100];
+	filter:Alpha(Opacity=@o);
 }
 @=boxShadow(shadowTop=@shadowTop,shadowLeft=@shadowLeft,shadowFuzz=@shadowFuzz,shadowColor=@shadowColor){
 	-moz-box-shadow: @shadowTop @shadowLeft @shadowFuzz @shadowColor;
@@ -68,14 +68,14 @@
 /** took from */
 
 @=bgGradient(start=@shadowColor,end=@lightShadowColor,hor=0){
-  background-color:@start;
-  background: -o-linear-gradient([@hor!=0?left,top],@start,@end);
-  background:-webkit-gradient(linear,left top,[@hor!=0?right top,left bottom],from(@start),to(@end));
-  background: -webkit-linear-gradient([@hor!=0?left,top],@start,@end);
-  background: -moz-linear-gradient([@hor!=0?left,top],@start,@end);
-  background: -ms-linear-gradient([@hor!=0?left,top],@start,@end);
-  background-image:linear-gradient([@hor!=0?left,top],@start,@end);
-  filter: progid:DXImageTransform.Microsoft.Gradient(StartColorStr='@start', EndColorStr='@end', GradientType=[@hor!=0?1,0]);
+	background-color:@start;
+	background: -o-linear-gradient([@hor!=0?left,top],@start,@end);
+	background:-webkit-gradient(linear,left top,[@hor!=0?right top,left bottom],from(@start),to(@end));
+	background: -webkit-linear-gradient([@hor!=0?left,top],@start,@end);
+	background: -moz-linear-gradient([@hor!=0?left,top],@start,@end);
+	background: -ms-linear-gradient([@hor!=0?left,top],@start,@end);
+	background-image:linear-gradient([@hor!=0?left,top],@start,@end);
+	filter: progid:DXImageTransform.Microsoft.Gradient(StartColorStr='@start', EndColorStr='@end', GradientType=[@hor!=0?1,0]);
 }
 @inlineStack{
 	zoom:1;
