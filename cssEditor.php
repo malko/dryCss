@@ -321,7 +321,7 @@ $codeMirrorPath = '../CodeMirror-0.91';
 		}
 		if( window.opener && window.opener.document){
 			$('*',window.opener.document).each(function(){
-				var e = $(this),id=e.attr('id'),cname=e.attr('class').split(/\s+/);
+				var e = $(this),id=e.prop('id'),cname=e.prop('class').split(/\s+/);
 				if( id ){
 					completionManager.addCompItem('#'+id);
 				}
@@ -490,7 +490,7 @@ $codeMirrorPath = '../CodeMirror-0.91';
 							s = $('style[id=cssEditorComputedStyle]',parentHead), // must use [id=] expression to work under my chrome version
 							l = $('link[href$="'+self.elmt.attr('id')+'.css"]',parentHead);
 						cssPath = window.location.href.replace(/[^\/]*$/,'')+self.options.compFilePath;
-						out = out.replace(/url\((\.\/|)?(?!http:\/\/)/g,'url('+cssPath+(cssPath.substr(-1)==='/'?'':'/'));
+						out = out.replace(/url\((\.\/|)?(?!http:\/\/|data:)/g,'url('+cssPath+(cssPath.substr(-1)==='/'?'':'/'));
 						if( l.length)
 							l.remove();
 						if( s.length)

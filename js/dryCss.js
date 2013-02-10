@@ -1,6 +1,7 @@
 /**
 DryCss parser
 * @changelog
+*            - 2012-02-16 - now merge distincly filter and -ms-filter rules
 *            - 2011-06-09 - bug correction in dryer when no blank char at the end of a rule + better output indentation
 *            - 2011-05-03 - bug correction regarding function with no parameters
 *                         - import dryCss passed as option in the new instance
@@ -192,12 +193,19 @@ dryCss.prototype = {
 			'merging':function(str){
 				if(! str.match(/filter\s*:/i) )
 					return str;
-				var filters=[];
+				var filters=[],msFilters=[];
 				str = str.replace(/(-ms-)?filter\s*:([^;]+);/g,function(m,ms,filter){
-					filters.push(filter);
+					if( ms ){
+						msFilters.push(filter);
+					}else{
+						filters.push(filter);
+					}
 					return '';
 				});
-				return str+'filter:'+filters.join(', ')+';';
+				return str
+					+(filters.length?'filter:'+filters.join(', ')+';':'')
+					+(msFilters.length?'-ms-filter:'+msFilters.join(', ')+';':'')
+				;
 			},
 			//-- make correct indentation
 			'clean':[
@@ -689,13 +697,13 @@ dryCss.defaults={
 
 /** DRYER **/
 function dryer(cssString){
-	if(! this instanceof dryer){
-		return new dryer(css);
+	if(! (this instanceof dryer)){
+		return new dryer(cssString).transform();
 	}
 	this.css = cssString;
 	this.dry = '';
 	this._rules={};
-	this.transform();
+	//this.transform();
 }
 dryer.prototype = {
 	parseUntil: function(token,consume){
