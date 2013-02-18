@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Drycss : Don’t Repeat Yourself writing Cascading Style Sheets" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Drycss</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/malko/dryCss">View on GitHub</a>
+
+          <h1 id="project_title">Drycss</h1>
+          <h2 id="project_tagline">Don’t Repeat Yourself writing Cascading Style Sheets</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/malko/dryCss/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/malko/dryCss/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>DryCss</h1>
+
+<p>This is a Css framework written in javascript.</p>
+
+<p>For now only the parser will be presented, i'm actually working on it, and then will work on a web gui.</p>
+
+<h2>What mean dryCss</h2>
+
+<p>DRY is an acronym meaning Dont't Repeat Yourself.<br>
+If you're looking at this page i suppose that you already know what Css stand for.</p>
+
+<h2>What is it ?</h2>
+
+<p>This is a tool to assist you in creating css quicker.</p>
+
+<h2>What about the syntax</h2>
+
+<p>The syntax is evolving as this project is under heavy development at the moment.</p>
+
+<h3>Comments</h3>
+
+<p>multiline C style comments as in normal CSS files is supported</p>
+
+<p>single line comments starting with a <em>//</em> is also supported but only when at the begining of the line ( leading spaces are ignored )</p>
+
+<h3>External file imports</h3>
+
+<ul>
+<li>you can import other files as in normal css using <code>@import style.css;</code>
+</li>
+<li>You may also import file directly inside the current document by doing a <code>@!import style.dss;</code> (dss is the common dryCss file extension)</li>
+</ul><h3>Variables</h3>
+
+<p>You can declare variable like this:</p>
+
+<div class="highlight"><pre><span class="k">@red</span><span class="o">:</span><span class="nf">#FF0000</span><span class="p">;</span>
+</pre></div>
+
+<p>and use it anywhere in your code like this:</p>
+
+<div class="highlight"><pre><span class="nc">.red</span><span class="p">{</span> <span class="k">color</span><span class="o">:@</span><span class="nb">red</span><span class="p">;</span> <span class="p">}</span>
+</pre></div>
+
+<h3>Nested code</h3>
+
+<p>As in most of similar tool you can nest your rules declaration so you can do something like that:</p>
+
+<div class="highlight"><pre><span class="nt">a</span><span class="p">{</span>
+  <span class="k">text-decoration</span><span class="o">:</span><span class="k">none</span><span class="p">;</span>
+  <span class="k">color</span><span class="o">:</span><span class="nb">blue</span><span class="p">;</span>
+  <span class="o">//</span> <span class="s2">":pseudo"</span> <span class="n">class</span> <span class="n">are</span> <span class="n">detected</span> <span class="n">and</span> <span class="n">the</span> <span class="n">result</span> <span class="n">will</span> <span class="n">be</span> <span class="s2">"a:hover"</span>
+  <span class="o">:</span><span class="n">hover</span><span class="err">{</span>
+    <span class="k">text-decoration</span><span class="o">:</span><span class="k">underline</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="o">//</span> <span class="nt">prefixing</span> <span class="nt">the</span> <span class="nt">rule</span> <span class="nt">with</span> <span class="nt">a</span> <span class="s2">"!"</span> <span class="nt">allow</span> <span class="nt">rendering</span> <span class="nt">of</span> <span class="s2">"a.red"</span> <span class="nt">instead</span> <span class="nt">of</span> <span class="s2">"a red"</span>
+  <span class="o">!</span><span class="nc">.red</span><span class="p">{</span>
+    <span class="k">color</span><span class="o">:@</span><span class="nb">red</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="c">/* this one will result in "a span" </span>
+<span class="c">     and "span, !.red" would give us "a span, a.red" */</span>
+  <span class="nt">span</span><span class="p">{</span>
+    <span class="k">font-size</span><span class="o">:</span><span class="m">1.1em</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="err">}</span>
+</pre></div>
+
+<p>Which will be rendered as </p>
+
+<div class="highlight"><pre><span class="nt">a</span><span class="p">{</span>
+  <span class="k">text-decoration</span><span class="o">:</span><span class="k">none</span><span class="p">;</span>
+  <span class="k">color</span><span class="o">:</span><span class="nb">blue</span><span class="p">;</span>
+  <span class="k">font-weight</span><span class="o">:</span><span class="k">bold</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nt">a</span><span class="nd">:hover</span><span class="p">{</span>
+  <span class="k">text-decoration</span><span class="o">:</span><span class="k">underline</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nt">a</span><span class="nc">.red</span><span class="p">{</span>
+  <span class="k">color</span><span class="o">:</span><span class="m">#FF0000</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nt">a</span> <span class="nt">span</span><span class="p">{</span>
+  <span class="k">font-size</span><span class="o">:</span><span class="m">1.1em</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>Please note the usage of <em>!</em> to make the nested rule extending the parent one instead of pointing to a child element.</p>
+
+<h3>Variables Rules also named Mixins</h3>
+
+<p>You may also use define some complete rules as variable we then will call them mixins here is a sample of mixin:</p>
+
+<div class="highlight"><pre><span class="k">@myMix</span><span class="p">{</span>
+  <span class="nt">margin</span><span class="nd">:0</span><span class="o">;</span>
+  <span class="nt">padding</span><span class="nd">:0</span><span class="o">;</span>
+  <span class="o">!</span><span class="nc">.big</span><span class="p">{</span>
+    <span class="k">font-weight</span><span class="o">:</span><span class="k">bold</span><span class="p">;</span>
+    <span class="k">font-size</span><span class="o">:</span><span class="m">1.1em</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="nt">span</span><span class="p">{</span>
+  <span class="o">@:@</span><span class="n">myMix</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nt">div</span><span class="p">{</span>
+  <span class="o">@!:@</span><span class="n">myMix</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>Which will be rendered as:</p>
+
+<div class="highlight"><pre><span class="nt">span</span><span class="p">{</span>
+  <span class="k">margin</span><span class="o">:</span><span class="m">0</span><span class="p">;</span>
+  <span class="k">padding</span><span class="o">:</span><span class="m">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nt">div</span><span class="p">{</span>
+  <span class="k">margin</span><span class="o">:</span><span class="m">0</span><span class="p">;</span>
+  <span class="k">padding</span><span class="o">:</span><span class="m">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nt">div</span><span class="nc">.big</span><span class="p">{</span>
+  <span class="k">font-weight</span><span class="o">:</span><span class="k">bold</span><span class="p">;</span>
+  <span class="k">font-size</span><span class="o">:</span><span class="m">1.1em</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>Please note how we <em>import</em> them inside our rules... </p>
+
+<ul>
+<li>
+<strong>@:</strong> make a simple import of the mixin himself but not the nested rules</li>
+<li>
+<strong>@!:</strong> make a <em>deep</em> import so it import the nested rules too.
+Thoose may not only used to import mixins but also previously declared rules and even a rule property so you may do something like this:
+<code>css
+div{
+@:a span;
+font-weight:@:div.big[font-weight];
+}
+</code>
+to get this:
+<code>css
+div{
+font-size:1.1em
+font-weight:bold;
+}
+</code>
+</li>
+</ul><h3>Functions</h3>
+
+<p>In fact thoose are not really function but more like mixins with parameters, here's a little example:</p>
+
+<div class="highlight"><pre><span class="o">@=</span><span class="nt">border</span><span class="o">(</span><span class="nt">style</span><span class="o">=</span><span class="nt">solid</span><span class="o">,</span><span class="nt">color</span><span class="o">=</span><span class="nt">silver</span><span class="o">,</span><span class="nt">weight</span><span class="o">=</span><span class="nt">1px</span><span class="o">)</span><span class="p">{</span>
+  <span class="k">border</span><span class="o">:@</span><span class="n">style</span> <span class="o">@</span><span class="k">color</span> <span class="o">@</span><span class="n">weight</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nc">.box</span><span class="p">{</span> <span class="o">@=</span><span class="k">border</span><span class="p">();</span> <span class="p">}</span>
+<span class="nc">.boxred</span><span class="p">{</span> <span class="o">@=</span><span class="k">border</span><span class="p">(</span><span class="o">,</span><span class="nb">red</span><span class="p">);</span> <span class="p">}</span>
+</pre></div>
+
+<p>This should give you something like this:</p>
+
+<div class="highlight"><pre><span class="nc">.box</span><span class="p">{</span>
+  <span class="k">border</span><span class="o">:</span><span class="k">solid</span> <span class="nb">silver</span> <span class="m">1px</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nc">.boxred</span><span class="p">{</span>
+  <span class="k">border</span><span class="o">:</span><span class="k">solid</span> <span class="nb">red</span> <span class="m">1px</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<h3>Note on parameters in declaration</h3>
+
+<p>As you can see we can assign default values for parameters but this is not an obligation we also may assign empty values as default so writing <code>@=func(param1,param2=){}</code> will result in param1 to be mandatory and param2 to be optional and get assigned an empty string as default value.</p>
+
+<h3>Note on parameters at call time</h3>
+
+<p>As you can see in previous example, we can skip a value to simply use the default parmater value so doing <code>@=border(,red);</code> result in first parameter to take the <em>solid</em> value.
+If we want to pass an empty value to the first parameter we should do it like this: <code>@=border("",red);</code></p>
+
+<h3>Expressions</h3>
+
+<p>Some simple conditional expressions and maths operations can be perform by encapsultating them inside an evaluation block <code>[ stuff to eval ]</code></p>
+
+<h3>Maths expressions</h3>
+
+<p>simple maths expresssions can be performed inside an evaluation, complex expressions (understand with multiple operators like a+b+c) just don't work out of the box you must encapsultate each expressions inside multiple evaluation blocks.</p>
+
+<p>Units are partially supported inside such expressions but no conversion will be done between units so adding some 'em' with some 'px' will only results by keeping the first unit encountered so in this case all values will be considered as 'em'</p>
+
+<p><strong>supported operators are +-/∗</strong></p>
+
+<p>Here's some example</p>
+
+<div class="highlight"><pre><span class="nc">.testAdd</span><span class="p">{</span> <span class="k">width</span><span class="o">:</span><span class="p">[</span><span class="m">10</span><span class="o">+</span><span class="m">10</span><span class="p">]</span><span class="k">px</span><span class="p">;</span> <span class="p">}</span>
+<span class="nc">.testAddUnit</span><span class="p">{</span> <span class="k">width</span><span class="o">:</span><span class="p">[</span><span class="m">10px</span><span class="o">+</span><span class="m">10em</span><span class="p">];</span> <span class="p">}</span>
+<span class="nc">.testMultipleOps</span><span class="p">{</span> <span class="k">width</span><span class="o">:</span><span class="p">[</span><span class="m">5</span><span class="o">*</span><span class="p">[</span><span class="m">10</span><span class="o">/</span><span class="m">100</span><span class="p">]]</span><span class="o">%</span><span class="p">;}</span>
+</pre></div>
+
+<p>will result in:</p>
+
+<div class="highlight"><pre><span class="nc">.testAdd</span><span class="p">{</span> <span class="k">width</span><span class="o">:</span><span class="m">20px</span><span class="p">;</span> <span class="p">}</span>
+<span class="nc">.testAddUnit</span><span class="p">{</span> <span class="k">width</span><span class="o">:</span><span class="m">20px</span><span class="p">;</span> <span class="p">}</span>
+<span class="nc">.testMultipleOps</span><span class="p">{</span> <span class="k">width</span><span class="o">:</span><span class="m">0</span><span class="o">.</span><span class="m">5</span><span class="o">%</span><span class="p">;}</span>
+</pre></div>
+
+<p>Maths expressions may also apply to HEX colors values like #RGB or #RRGGBB. Each operand of the expressions may be a HEX color and/or an int or float value.</p>
+
+<h4>Comparison expressions</h4>
+
+<p>Simple comparison expressions are possible using a ternary operator like this: <code>[ a ? b , c ]</code>
+if a is not empty (any value other than a blank string) then b is returned else c is returned, b is not mandatory and may be ommited.</p>
+
+<p>the evaluated expression (the a part in <code>[ a ? b , c ]</code>) may contain comparison operators: <strong>&gt;</strong>, <strong>&gt;=</strong>, <strong>&lt;</strong>, <strong>&lt;=</strong>, <strong>==</strong>, <strong>!=</strong>, <strong>===</strong>, <strong>!===</strong> with the addition of AND (**&amp;&amp;**), and OR (**||**) operators.</p>
+
+<h2>State of the project</h2>
+
+<ul>
+<li>I'm also asking myself about rewriting the whole parser, but my current attempts to do so just make me going nowhere (at least not where i want to go) so this is always something possible but i'll make sure to make the syntax compatible.</li>
+<li>I'm actually using it in my current job on a daily basis and it make my life easyer. I'm actually thinking about a way to propose a complete tool accessible from the web based on the parser as it permits to make your css directly inside your browser without refreshing the pages. And be sure that it really make me work faster!</li>
+</ul><p>Hoping this crazy little thing may help someone else, i wish you an happy css making,
+regards,</p>
+
+<p>Malko</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Drycss maintained by <a href="https://github.com/malko">malko</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-38585409-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+
+  </body>
+</html>
