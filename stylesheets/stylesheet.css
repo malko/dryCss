@@ -272,7 +272,7 @@ Full-Width Styles
 
 .inner {
   position: relative;
-  max-width: 640px;
+  max-width: 840px;
   padding: 20px 10px;
   margin: 0 auto;
 }
@@ -428,4 +428,11 @@ Small Device Styles
     font-size: 11px;
   }
 
+}
+
+.warning{
+	border:solid #fb4 1px;
+	color:#950;
+	background:#ffb;
+	padding:.4em .8em;
 }
